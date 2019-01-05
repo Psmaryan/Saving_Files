@@ -1,0 +1,55 @@
+﻿
+<head>
+    @model SavingFile.ViewModels.RegisterViewModel
+
+
+   <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+<style>
+    #logOut {
+        display: none;
+    }
+    #loginKey {
+        display: none;
+    }
+    #registe2rKey {
+        display: none;
+    }
+
+</style>
+</head>
+<body>
+
+    <br />
+    <a class="btn btn-primary" href="/Account/Index">&#x25C4 Return to home page</a>
+    <br />
+    <h2>New User Registration</h2>
+
+    
+    <form data-ajax="true" data-ajax-mode="replace" data-ajax-update="#results" id="form0" data-ajax-method="POST" asp-controller="Account" asp-action="Register">
+
+
+        <div class="text-danger" asp-validation-summary="ModelOnly"></div>
+        <div>
+            <label asp-for="Email"></label><br />
+            <input asp-for="Email" />
+            <span class="text-danger" asp-validation-for="Email"></span>
+        </div>
+
+        <div>
+            <label asp-for="Password"></label><br />
+            <input asp-for="Password" />
+            <span class="text-danger" asp-validation-for="Password"></span>
+        </div>
+        <div>
+            <label asp-for="PasswordConfirm"></label><br />
+            <input asp-for="PasswordConfirm" />
+            <span class="text-danger" asp-validation-for="PasswordConfirm"></span>
+        </div>
+        <div>
+            <br>
+            <input id="registerButton" class="btn" type="submit" value="Register" />
+        </div>
+
+    </form>
+</body>

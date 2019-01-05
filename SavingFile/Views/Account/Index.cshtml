@@ -1,0 +1,469 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>JWT в ASP.NET Core Web API</title>
+    <style>
+       
+        #container {
+            width: 100%;
+            overflow: hidden;
+            max-width: 2000px;
+            margin: auto;
+            
+        }
+        #content_right {
+            width: 100%;
+            float: right;
+            margin-left: -360px;
+        }
+        .menT {
+
+            float: left;
+            display: block;
+            font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            width: 350px;
+            height: 99%;
+            overflow-x: hidden;
+            overflow-y: auto;        
+        }  
+        .menT .filetree {
+            padding-top: 7px;
+        }
+        .menT ul {
+            margin-right: 3px;
+        }
+        .treeview, .treeview ul {
+            padding: 0;
+            margin: 0;
+            margin-left: 3px;
+            list-style: none;
+            line-height: 240%;
+        }
+        li.expandable {
+            background-position: 2px -384px;
+        }
+        li {
+            display: list-item;
+        }
+        .articleText {
+            padding: 10px;
+            margin-left: 10px;
+            margin-right: 5px;
+            height: auto;
+        }
+        #content_right_inner {
+            margin-left: 360px;
+        }
+        .menC {
+            font-size: 13px;
+            display: block;
+            width: auto;
+            float: none;
+            clear: both;
+            background: #F7F7FA;
+            overflow: hidden;
+            margin: 0;
+            margin-right: 2px;
+            border-left: 1px solid #ccc;
+            border-right: 1px solid #ccc;
+        }
+        .userInfoLog {
+            border: 4px double black;
+            background-color: rgb(222, 222, 216);
+        }
+        .filetree li {
+            padding: 3px 0 2px 16px;
+        }
+        .userHover:hover {
+            background-color: khaki;
+            cursor: pointer;
+        }
+        #addFileButton {
+            margin-bottom: 9px;
+        }
+        #fieldAddFile {
+            display: none;
+            padding: 10px; 
+        }
+        .loginF {
+            margin: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+    <br />
+    <h1>Save your files</h1>
+    <input id="loginId" type="hidden" value="">
+    <br />
+
+    
+    <div id="addInfo">
+        <div class="btn btn-info btn-lg" id="addFileButton">Add a new file</div>
+
+        <div id="fieldAddFile">
+            <h4>Choose your file</h4>
+            <input id="myFile" type="file">
+            <br />
+           <button id="saveFile" class="brn btn alert-success">Save</button>
+        </div>
+    </div>
+
+    <div class="userInfoLog">
+        <div style="display:none " class="modal-body" id="registerUser">
+
+        </div>
+
+
+        <div style="display:none" class="modal-body" id="loginUser">
+
+            @model SavingFile.ViewModels.LoginViewModel
+
+            <h2>Login to the application</h2>
+            <form method="post" asp-controller="Account" asp-action="Login">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div>
+                    <label asp-for="Email"></label><br />
+                    <input id="emailLogin" asp-for="Email" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div>
+                    <label asp-for="Password"></label><br />
+                    <input id="passwordLogin" asp-for="Password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+
+                <div>
+                    <br />
+                    <input class="btn" type="submit" id="submitLogin" value="Login" />
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+
+    <div id="container">
+        <div id="content_right">
+            <div id="content_right_inner">
+                <div id="menC" class="menC">
+                    <div class="articleText" id="articleText">
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        <div class="menT" id="menT" style="max-height: 7297px;">
+            <input id="activeId" type="hidden" value="">
+            <ul id="browser" class="table-hover list-group filetree treeview">
+                <li class="list-group-item-heading text-info">Users</li>
+            </ul>
+        </div>
+    </div>
+
+
+    <script>
+
+        $('#getDataByLogin2').click(function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: 'GET',
+                url: '/api/values/getlogin',
+                beforeSend: function (xhr) {
+
+                    var token = sessionStorage.getItem(tokenKey);
+                    xhr.setRequestHeader("Authorization", "Bearer " + token);
+                },
+                success: function (data) {
+                    alert(data);
+                },
+                fail: function (data) {
+                    console.log(data);
+                }
+            });
+        });
+
+        var registerLoad = true;
+        var tokenKey = "accessToken";
+        var emailUser = "emailUser";
+        var idUser = "idUser";
+
+        $(document).ready(function () {
+            LoadPage();
+        });
+
+        $('body').on('click', '#registerButton', function (e) {
+            $("#results").fadeIn(800);
+            $("#results").fadeOut(1200);
+        });
+
+        $('body').on('click', '#submitLogin', function (e) {
+
+
+            e.preventDefault();
+            var loginData = {
+                grant_type: 'password',
+                username: $('#emailLogin').val(),
+                password: $('#passwordLogin').val()
+            };
+
+
+            $.ajax({
+                type: 'POST',
+                url: '/token',
+                data: loginData,
+                success: function (data) {
+
+                    sessionStorage.setItem(emailUser, data.username);
+                    sessionStorage.setItem(idUser, data.id);
+                    // сохраняем в хранилище sessionStorage токен доступа
+                    sessionStorage.setItem(tokenKey, data.access_token);
+                   // console.log(data.access_token);
+
+                    //LogIn();
+                    window.location.reload();
+                },
+
+                error: function (data) {
+                    alert("Invalid email or password.");
+                }
+            });
+        });
+
+        $('#logOut').click(function (e) {
+            e.preventDefault();
+            
+            sessionStorage.removeItem(tokenKey);
+            sessionStorage.removeItem(idUser);
+            sessionStorage.removeItem(emailUser);
+
+            $.ajax({
+                type: "POST",
+                url: '/Account/LogOff',
+                success: function (result) {
+                    window.location.reload();
+                },
+                error: function (xhr, status, p3) {
+                    alert("Failed Logout!");
+                }
+
+            });
+            
+        });
+
+        //---example----
+        $('#getDataByLogin').click(function (e) {
+            e.preventDefault();
+            $.ajax({
+                        type: "POST",
+                        dataType: "text",
+                        contentType: false,
+                        processData: false,
+                        url: '/File/CreateFileAsync',
+                        data: dataF,
+                        beforeSend: function (xhr) {
+
+                            var token = sessionStorage.getItem(tokenKey);
+                            xhr.setRequestHeader("Authorization", "Bearer " + token);
+                        },
+                        success: function (result) {
+                            console.log(result);
+                            alert('save success');
+                        },
+                        error: function (xhr, status, p3) {
+                            alert("Failed to load data!");
+                            console.log(status)
+                        }
+
+            });
+        });
+
+        $("#registerKey").click(function () {
+
+            $("#loginUser").css("display", "none");
+            if (registerLoad) {
+                $.get('@Url.Action("Register", "Account")',
+                    function (data) {
+                        $('#registerUser').html(data);
+                    });
+
+                registerLoad = false;
+            }
+            $("#registerUser").fadeIn(800);
+        });
+
+        $("#loginKey").click(function () {
+
+            $("#registerUser").css("display", "none");
+            $("#loginUser").fadeIn(800);
+        });
+
+        function LogIn() {
+            $('#userName').text(sessionStorage.getItem(emailUser));
+
+            $('#userInfo').css('display', 'block');
+            $('.loginOut').css('display', 'block');
+            $("#registerUser").css("display", "none");
+            $("#loginUser").css("display", "none");
+            $('.loginF').css("display", "none");
+            $('#addInfo').css("display", "block");
+            LoadNameFiles(sessionStorage.getItem(idUser));
+        }
+
+        function LogOut() {
+            $('.loginF').css('display', 'block');
+            $('#userInfo').css('display', 'none');
+            $('.loginOut').css('display', 'none');
+            $('#addInfo').css("display", "none");
+        }
+
+        function LoadPage() {
+            var tokenK = sessionStorage.getItem(tokenKey);
+            if (tokenK != undefined && tokenK != null) {
+                LogIn();
+            }
+            else {
+                LogOut();
+                //send file log off
+            }
+        }
+
+        //---FILE-------------------------------------------File-------
+        //.............................................................
+
+        $.ajax({
+            type: 'GET',
+            url: '/File/GetUsers',
+            beforeSend: function (xhr) {
+
+                var token = sessionStorage.getItem(tokenKey);
+                xhr.setRequestHeader("Authorization", "Bearer " + token);
+            },
+            success: function (data, textStatus, xhr) {
+                var autUser = sessionStorage.getItem(idUser);
+
+
+                if (xhr.status == 200) {
+                    AddUsers("<div class=\"text-success text-lowercase\">Your Files</div>", autUser);
+
+                    data.forEach(function (element) {
+                        if (element.id != autUser) {
+                            AddUsers(element.name, element.id);
+                        }
+                    });
+                }
+                else {
+                    $('#browser').append("<li class=\"list-group-item-danger\">not found</li>");
+                }
+            },
+        });
+
+        function AddUsers(dataN, idN) {
+            var tagUsers = "<li id=" + idN + " onclick=\"ClikedUser(this)\" data-Id=\"" + idN + "\" class=\"userHover list-group-item closed expandable\">" + dataN + "</li>";
+            $('#browser').append(tagUsers);
+        }
+
+        function ClikedUser(event) {
+            var newActId = $(event).data('id');
+            var oldActId = $('#activeId').val();
+
+            if (newActId != oldActId) {
+                if (oldActId != undefined && oldActId != "")
+                    $("#" + oldActId).removeClass("active");
+
+                $('#activeId').val(newActId);
+                $(event).addClass("active");
+
+                if (newActId != sessionStorage.getItem(idUser)) {
+                    LoadNameFiles(newActId, true);
+                }
+                else {
+                    LoadNameFiles(newActId, false);
+                }
+            }
+        }
+
+        $('#addFileButton').click(function () {
+            $('#fieldAddFile').toggle();
+        });
+
+        $('#saveFile').click(function () {
+            //e.preventDefault();
+            var files = document.getElementById("myFile").files;
+
+            if (files.length != 0) {
+                if (window.FormData !== undefined) {
+                    var dataF = new FormData();
+                    dataF.append("idUser", sessionStorage.getItem(idUser))
+                    dataF.append("file", files[0]);
+                    //console.log("ID: " + sessionStorage.getItem(idUser) + "\n");
+                    
+                    $.ajax({
+                        type: "POST",
+                        dataType: "text",
+                        contentType: false,
+                        processData: false,
+                        url: '/File/CreateFileAsync',
+                        data: dataF,
+                        beforeSend: function (xhr) {
+
+                            var token = sessionStorage.getItem(tokenKey);
+                            xhr.setRequestHeader("Authorization", "Bearer " + token);
+                        },
+                        success: function (result) {
+                            console.log(result);
+                            alert('save success');
+                        },
+                        error: function (xhr, status, p3) {
+                            alert("Failed to load data!");
+                            console.log(status)
+                        }
+
+                   });
+
+                }
+                else {
+                    alert("The browser does not support downloading HTML5 files!");
+                }
+            }
+            else {
+                alert("Choose file, please!")
+            }
+        });
+
+        function LoadNameFiles(idUser, add) {
+            $.ajax({
+                type: "GET",
+                dataType: "text",
+                url: "/File/getNameFile?idUser=" + idUser,
+                //data: idUser,
+                beforeSend: function (xhr) {
+
+                    var token = sessionStorage.getItem(tokenKey);
+                    xhr.setRequestHeader("Authorization", "Bearer " + token);
+                },
+                success: function (result) {
+                    $('#articleText').html(result);
+                },
+                error: function (xhr, status, p3) {
+                    alert("Failed to load data!");
+                    console.log(status)
+                }
+
+            });
+        } 
+
+
+
+    </script>
+</body>
+</html>

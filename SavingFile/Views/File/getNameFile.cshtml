@@ -1,0 +1,103 @@
+﻿@model IEnumerable<object[]>
+
+
+<div id="getNameFile">
+    <input type="hidden" id="idUserData" value="@ViewBag.IdUser"/>
+    @foreach (var namefile in Model)
+     {
+        <div id="@namefile[3]" class="list-group color-event" style="padding: 15px">
+            <div class="text-success">
+                @namefile[1]
+            </div>
+            <div style="color: dimgray">
+               <b> date added: </b> @namefile[2]
+            </div>
+            <div id="@namefile[0]">
+
+                <div style="display:inline-block; " class="deleteButton"><button class="btn btn-sm btn-danger" data-Id="@namefile[3]" onclick="DeleteFiles(this)" id="deleteFile">Delete</button></div>
+                <div style="display:inline-block; " class="addButton"><button class="btn btn-sm btn-info" data-Id="@namefile[0]" onclick="SaveFiles(this)" id="saveFile">Save file to yourself</button></div>
+                <a style="display:inline-block;" class="btn-link" href = "/File/DownloadFile?idFile=@namefile[0]">Download</a>
+            
+            </div>
+        </div>
+     }
+</div>
+
+<script>
+    var tokenKey = "accessToken";
+    var idUser = "idUser";
+
+    $(document).ready(function () {
+        VerifyUser();
+    });
+
+    function DeleteFiles(event) {
+                
+        var dataF = {
+            idFile: $(event).data('id'),
+            idUser: sessionStorage.getItem(idUser)
+        }
+        console.log(dataF);
+        
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            url: '@Url.Action("DeleteFile", "File")',
+            data: JSON.stringify(dataF),
+            beforeSend: function (xhr) {
+                var token = sessionStorage.getItem(tokenKey);
+                xhr.setRequestHeader("Authorization", "Bearer " + token);
+            },
+            complete: function (data) {
+                $("#" + $(event).data('id')).remove();
+            }
+        });
+    }
+
+
+    function SaveFiles(event) {
+
+        var dataF = {
+            idFile: $(event).data('id'),
+            idUser: sessionStorage.getItem(idUser)
+        }
+      
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            url: '@Url.Action("AddFileToUser", "File")',
+            data: JSON.stringify(dataF),
+            beforeSend: function (xhr) {
+                var token = sessionStorage.getItem(tokenKey);
+                xhr.setRequestHeader("Authorization", "Bearer " + token);
+            },
+            complete: function () {
+                alert("successfully added");
+            }
+        });
+    }
+
+
+    function VerifyUser() {
+        var registerUserId = sessionStorage.getItem(idUser);
+        var dataUserId = $('#idUserData').val();
+        
+        if (registerUserId == dataUserId) {
+            $('.deleteButton').css('display', 'block');
+            $('.addButton').css('display', 'none');
+        }
+        else {
+            $('.deleteButton').css('display', 'none');
+            $('.addButton').css('display', 'block');
+        }
+
+        $('.color-event').css('background-color', '#E1CBD0');;
+
+    }
+
+
+
+</script>
+
